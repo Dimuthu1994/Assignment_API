@@ -1,6 +1,7 @@
 ﻿using Assignment_API.Data;
 using Assignment_API.Models;
 using Assignment_API.Models.Dto;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,17 +13,20 @@ namespace Assignment_API.Controllers
     {
 
         private readonly ApplicationDbContext _db;
+        private readonly IMapper _mapper;
 
-        public ProductController(ApplicationDbContext db)
+        public ProductController(ApplicationDbContext db, IMapper mapper)
         {
             _db = db;
+            _mapper = mapper;
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
-            return Ok(await _db.Products.ToListAsync());
+            IEnumerable<Product> productList = await _db.Products.ToListAsync();
+            return Ok(_mapper.Map<List<ProductDto>>(productList));
         }
 
         [HttpGet("{id:int}")]
@@ -40,7 +44,7 @@ namespace Assignment_API.Controllers
             {
                 return NotFound();
             }
-            return Ok(product);
+            return Ok(_mapper.Map<ProductDto>(product));
         }
 
         [HttpPost]
@@ -59,17 +63,7 @@ namespace Assignment_API.Controllers
                 return BadRequest(product);
             }
 
-            Product model = new()
-            {
-                Active = product.Active,
-                ProductName = product.ProductName,
-                SKU = product.SKU,
-                Created = product.Created,
-                RetailPrice = product.RetailPrice,
-                SalePrice = product.SalePrice,
-                LowestPrice = product.LowestPrice,
-            };
-
+            Product model = _mapper.Map<Product>(product);
 
             await _db.Products.AddAsync(model);
             await _db.SaveChangesAsync();
@@ -106,16 +100,9 @@ namespace Assignment_API.Controllers
             {
                 return BadRequest();
             }
-            Product model = new()
-            {
-                ProductId = product.ProductId,
-                Active = product.Active,
-                ProductName = product.ProductName,
-                SKU = product.SKU,
-                RetailPrice = product.RetailPrice,
-                SalePrice = product.SalePrice,
-                LowestPrice = product.LowestPrice,
-            };
+
+            Product model = _mapper.Map<Product>(product);
+
             await _db.Products.AddAsync(model);
             await _db.SaveChangesAsync();
             return NoContent();

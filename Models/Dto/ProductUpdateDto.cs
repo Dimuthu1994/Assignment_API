@@ -1,7 +1,10 @@
-﻿namespace Assignment_API.Models.Dto
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Assignment_API.Models.Dto
 {
     public class ProductUpdateDto
     {
+        [Required]
         public int ProductId { get; set; }
         public bool Active { get; set; }
         public string ProductName { get; set; }
