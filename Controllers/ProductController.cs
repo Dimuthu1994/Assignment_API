@@ -46,7 +46,7 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<ProductDto> CreateProduct([FromBody] ProductDto product)
+        public ActionResult<ProductDto> CreateProduct([FromBody] ProductCreateDto product)
         {
             if (_db.Products.FirstOrDefault(u => u.ProductName.ToLower() == product.ProductName.ToLower()) != null)
             {
@@ -57,13 +57,9 @@ namespace Assignment_API.Controllers
             {
                 return BadRequest(product);
             }
-            if (product.ProductId > 0)
-            {
-                return BadRequest(StatusCodes.Status500InternalServerError);
-            }
+
             Product model = new()
             {
-                ProductId = product.ProductId,
                 Active = product.Active,
                 ProductName = product.ProductName,
                 SKU = product.SKU,
@@ -77,7 +73,7 @@ namespace Assignment_API.Controllers
             _db.Products.Add(model);
             _db.SaveChanges();
 
-            return Ok(product);
+            return Ok(model);
         }
 
         [ProducesResponseType(StatusCodes.Status204NoContent)]
