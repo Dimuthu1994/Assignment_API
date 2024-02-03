@@ -2,6 +2,7 @@
 using Assignment_API.Models.Dto;
 using Assignment_API.Repository.IRepository;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -23,12 +24,18 @@ namespace Assignment_API.Controllers
         }
 
         [HttpGet]
+        [Authorize]
+        [ResponseCache(Duration = 30)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponseDto>> GetProducts()
+        public async Task<ActionResult<APIResponseDto>> GetProducts([FromQuery] string? search)
         {
             try
             {
                 IEnumerable<Product> productList = await _dbProduct.GetAllAsync();
+                if (!string.IsNullOrEmpty(search))
+                {
+                    productList = productList.Where(u => u.ProductName.ToLower().Contains(search));
+                }
                 _response.Result = _mapper.Map<List<ProductDto>>(productList);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
@@ -46,6 +53,8 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
+        [ResponseCache(Duration = 30)]
+        [Authorize]
         public async Task<ActionResult<APIResponseDto>> GetProduct(int id)
         {
             try
@@ -76,6 +85,7 @@ namespace Assignment_API.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -116,6 +126,7 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpDelete("{id:int}", Name = "DeleteProduct")]
+        [Authorize]
         public async Task<ActionResult<APIResponseDto>> DeleteProuct(int id)
         {
             try
@@ -147,6 +158,7 @@ namespace Assignment_API.Controllers
         [HttpPut("{id:int}", Name = "UpdateProduct")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize]
         public async Task<ActionResult<APIResponseDto>> UpdateProduct(int id, [FromBody] ProductUpdateDto product)
         {
             try
