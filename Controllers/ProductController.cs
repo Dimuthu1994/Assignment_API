@@ -84,7 +84,7 @@ namespace Assignment_API.Controllers
             {
                 return NotFound();
             }
-            _dbProduct.RemoveAsync(product);
+            await _dbProduct.RemoveAsync(product);
 
             return NoContent();
         }
