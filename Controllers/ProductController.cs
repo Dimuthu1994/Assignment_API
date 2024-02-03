@@ -1,9 +1,8 @@
-﻿using Assignment_API.Data;
-using Assignment_API.Models;
+﻿using Assignment_API.Models;
 using Assignment_API.Models.Dto;
+using Assignment_API.Repository.IRepository;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_API.Controllers
 {
@@ -12,12 +11,12 @@ namespace Assignment_API.Controllers
     public class ProductController : ControllerBase
     {
 
-        private readonly ApplicationDbContext _db;
+        private readonly IProductRepository _dbProduct;
         private readonly IMapper _mapper;
 
-        public ProductController(ApplicationDbContext db, IMapper mapper)
+        public ProductController(IProductRepository dbProduct, IMapper mapper)
         {
-            _db = db;
+            _dbProduct = dbProduct;
             _mapper = mapper;
         }
 
@@ -25,7 +24,7 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
-            IEnumerable<Product> productList = await _db.Products.ToListAsync();
+            IEnumerable<Product> productList = await _dbProduct.GetAllAsync();
             return Ok(_mapper.Map<List<ProductDto>>(productList));
         }
 
@@ -39,7 +38,7 @@ namespace Assignment_API.Controllers
             {
                 return BadRequest();
             }
-            var product = await _db.Products.FirstOrDefaultAsync(u => u.ProductId == id);
+            var product = await _dbProduct.GetAsync(u => u.ProductId == id);
             if (product == null)
             {
                 return NotFound();
@@ -53,7 +52,7 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ProductDto>> CreateProduct([FromBody] ProductCreateDto product)
         {
-            if (await _db.Products.FirstOrDefaultAsync(u => u.ProductName.ToLower() == product.ProductName.ToLower()) != null)
+            if (await _dbProduct.GetAsync(u => u.ProductName.ToLower() == product.ProductName.ToLower()) != null)
             {
                 ModelState.AddModelError("", "Product already Exist");
                 return BadRequest(ModelState);
@@ -65,8 +64,7 @@ namespace Assignment_API.Controllers
 
             Product model = _mapper.Map<Product>(product);
 
-            await _db.Products.AddAsync(model);
-            await _db.SaveChangesAsync();
+            await _dbProduct.CreateAsync(model);
 
             return Ok(model);
         }
@@ -81,13 +79,13 @@ namespace Assignment_API.Controllers
             {
                 return BadRequest();
             }
-            var product = await _db.Products.FirstOrDefaultAsync(u => u.ProductId == id);
+            var product = await _dbProduct.GetAsync(u => u.ProductId == id);
             if (product == null)
             {
                 return NotFound();
             }
-            _db.Products.Remove(product);
-            await _db.SaveChangesAsync();
+            _dbProduct.RemoveAsync(product);
+
             return NoContent();
         }
 
@@ -103,8 +101,7 @@ namespace Assignment_API.Controllers
 
             Product model = _mapper.Map<Product>(product);
 
-            await _db.Products.AddAsync(model);
-            await _db.SaveChangesAsync();
+            await _dbProduct.UpdateAsync(model);
             return NoContent();
         }
     }
