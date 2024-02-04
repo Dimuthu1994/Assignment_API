@@ -1,5 +1,4 @@
-﻿using Assignment_API.Models;
-using Assignment_API.Models.Dto;
+﻿using Assignment_API.Models.Dto;
 
 namespace Assignment_API.Repository.IRepository
 {
@@ -9,6 +8,6 @@ namespace Assignment_API.Repository.IRepository
 
         Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto);
 
-        Task<LocalUser> Register(RegisterationRequestDto registerationRequestDto);
+        Task<UserDto> Register(RegisterationRequestDto registerationRequestDto);
     }
 }

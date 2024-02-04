@@ -12,6 +12,7 @@ namespace Assignment_API
             CreateMap<Product, ProductCreateDto>().ReverseMap();
             CreateMap<Product, ProductUpdateDto>().ForMember(dest => dest.ProductId, opt => opt.Ignore());
             CreateMap<ProductUpdateDto, Product>();
+            CreateMap<ApplicationUser, UserDto>().ReverseMap();
         }
     }
 }

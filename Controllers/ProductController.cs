@@ -5,6 +5,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Text.Json;
 
 namespace Assignment_API.Controllers
 {
@@ -27,15 +28,21 @@ namespace Assignment_API.Controllers
         [Authorize]
         [ResponseCache(Duration = 30)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponseDto>> GetProducts([FromQuery] string? search)
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<APIResponseDto>> GetProducts([FromQuery] string? search, [FromQuery] int pageSize = 0, [FromQuery] int pageNumber = 1)
         {
             try
             {
-                IEnumerable<Product> productList = await _dbProduct.GetAllAsync();
-                if (!string.IsNullOrEmpty(search))
-                {
-                    productList = productList.Where(u => u.ProductName.ToLower().Contains(search));
-                }
+
+                IEnumerable<Product> productList = await _dbProduct.GetAllAsync(
+                    filter: p => string.IsNullOrEmpty(search) || p.ProductName.ToLower().Contains(search.ToLower()),
+                    pageSize: pageSize,
+                    pageNumber: pageNumber
+                );
+                Pagination pagination = new() { PageNumber = pageNumber, PageSize = pageSize };
+                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
+
                 _response.Result = _mapper.Map<List<ProductDto>>(productList);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
@@ -53,6 +60,8 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ResponseCache(Duration = 30)]
         [Authorize]
         public async Task<ActionResult<APIResponseDto>> GetProduct(int id)
@@ -89,6 +98,8 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponseDto>> CreateProduct([FromBody] ProductCreateDto product)
         {
 
@@ -125,6 +136,8 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpDelete("{id:int}", Name = "DeleteProduct")]
         [Authorize]
         public async Task<ActionResult<APIResponseDto>> DeleteProuct(int id)
@@ -158,6 +171,8 @@ namespace Assignment_API.Controllers
         [HttpPut("{id:int}", Name = "UpdateProduct")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize]
         public async Task<ActionResult<APIResponseDto>> UpdateProduct(int id, [FromBody] ProductUpdateDto product)
         {

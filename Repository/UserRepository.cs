@@ -2,6 +2,8 @@
 using Assignment_API.Models;
 using Assignment_API.Models.Dto;
 using Assignment_API.Repository.IRepository;
+using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -12,16 +14,20 @@ namespace Assignment_API.Repository
     public class UserRepository : IUserRepository
     {
         private readonly ApplicationDbContext _db;
+        private readonly IMapper _mapper;
+        private readonly UserManager<ApplicationUser> _userManager;
         private string secretKey;
 
-        public UserRepository(ApplicationDbContext db, IConfiguration configuration)
+        public UserRepository(ApplicationDbContext db, IConfiguration configuration, UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _db = db;
+            _mapper = mapper;
+            _userManager = userManager;
             secretKey = configuration.GetValue<string>("ApiSettings:Secret");
         }
         public bool IsUniqueUser(string username)
         {
-            var user = _db.LocalUsers.FirstOrDefault(x => x.UserName == username);
+            var user = _db.ApplicationUsers.FirstOrDefault(x => x.UserName == username);
             if (user == null)
             {
                 return true;
@@ -31,10 +37,10 @@ namespace Assignment_API.Repository
 
         public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
         {
-            var user = _db.LocalUsers.FirstOrDefault(u => u.UserName.ToLower() == loginRequestDto.UserName.ToLower()
-           && u.Password == loginRequestDto.Password);
+            var user = _db.ApplicationUsers.FirstOrDefault(u => u.UserName.ToLower() == loginRequestDto.UserName.ToLower());
+            bool isValid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
 
-            if (user == null)
+            if (user == null || isValid == false)
             {
                 return new LoginResponseDto()
                 {
@@ -62,25 +68,39 @@ namespace Assignment_API.Repository
             LoginResponseDto loginResponseDTO = new LoginResponseDto()
             {
                 Token = tokenHandler.WriteToken(token),
-                User = user
+                User = _mapper.Map<UserDto>(user),
             };
             return loginResponseDTO;
         }
 
-        public async Task<LocalUser> Register(RegisterationRequestDto registerationRequestDto)
+        public async Task<UserDto> Register(RegisterationRequestDto registerationRequestDto)
         {
-            LocalUser user = new()
+            ApplicationUser user = new()
             {
                 UserName = registerationRequestDto.UserName,
-                Password = registerationRequestDto.Password,
-                Name = registerationRequestDto.Name,
+                Email = registerationRequestDto.UserName,
+                NormalizedEmail = registerationRequestDto.UserName.ToUpper(),
+                Name = registerationRequestDto.Name
 
             };
 
-            _db.LocalUsers.Add(user);
-            await _db.SaveChangesAsync();
-            user.Password = "";
-            return user;
+            try
+            {
+                var result = await _userManager.CreateAsync(user, registerationRequestDto.Password);
+                if (result.Succeeded)
+                {
+                    var userToReturn = _db.ApplicationUsers
+                        .FirstOrDefault(u => u.UserName == registerationRequestDto.UserName);
+                    return _mapper.Map<UserDto>(userToReturn);
+
+                }
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            return new UserDto();
         }
     }
 }
