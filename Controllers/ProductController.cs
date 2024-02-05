@@ -2,7 +2,6 @@
 using Assignment_API.Models.Dto;
 using Assignment_API.Repository.IRepository;
 using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
@@ -25,8 +24,8 @@ namespace Assignment_API.Controllers
         }
 
         [HttpGet]
-        [Authorize]
-        [ResponseCache(Duration = 30)]
+        //[Authorize]
+        //[ResponseCache(Duration = 30)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -62,8 +61,8 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(404)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ResponseCache(Duration = 30)]
-        [Authorize]
+        //[ResponseCache(Duration = 30)]
+        //[Authorize]
         public async Task<ActionResult<APIResponseDto>> GetProduct(int id)
         {
             try
@@ -94,7 +93,7 @@ namespace Assignment_API.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        //[Authorize]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -139,7 +138,7 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpDelete("{id:int}", Name = "DeleteProduct")]
-        [Authorize]
+        //[Authorize]
         public async Task<ActionResult<APIResponseDto>> DeleteProuct(int id)
         {
             try
@@ -173,7 +172,7 @@ namespace Assignment_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [Authorize]
+        //[Authorize]
         public async Task<ActionResult<APIResponseDto>> UpdateProduct(int id, [FromBody] ProductUpdateDto product)
         {
             try
